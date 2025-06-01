@@ -1,0 +1,53 @@
+@startuml
+'https://plantuml.com/class-diagram
+skinparam backgroundColor #777777
+skinparam classBackgroundColor #00000000
+!include Enums.puml
+
+class Card{
+CardData cardData;
+CardUI cardUI;
+
+string name;
+CardTypes cardTypes;
+
+}
+
+
+Card <|-- CharacterCard
+CharacterTypes <-- CharacterCard
+class CharacterCard{
+CharacterTypes characterType;
+
+
+}
+
+
+Card <|-- TestimonyCard
+TestimonyStates <-- TestimonyCard
+class TestimonyCard{
+TestimonyStates testimonyState;
+bool isFact
+
+int trueTokenNumber;
+int falseTokenNumber;
+int trueLogicNumber;
+int falseLogicNumber;
+}
+
+
+Card <|-- PropCard
+PropTypes <-- PropCard
+class PropCard{
+PropTypes debateType;
+}
+
+
+Card <|-- WitnessCard
+class WitnessCard{
+}
+
+Card <|-- LogicCard
+class LogicCard{
+}
+@enduml

@@ -1,0 +1,68 @@
+@startuml
+'https://plantuml.com/class-diagram
+skinparam backgroundColor #777777
+skinparam classBackgroundColor #00000000
+!include Enums.puml
+
+
+ScriptableObject <|-- CardData
+CardTypes <-- CardData
+class CardData{
+
+CardTypes cardTypes;
+CardUI cardUI;  # Card拿到Data就可以实例化对应UI, 然后display
+}
+
+
+CardData <|--- LogicCardData
+LogicTypes <- LogicCardData
+class LogicCardData{
+LogicTypes logicType;
+string description;
+}
+
+
+CardData <|--- WitnessCardData
+class WitnessCardData{
+Sprite characterSprite;
+string description;
+}
+
+
+CardData <|---- PropCardData
+PropTypes <- PropCardData
+class PropCardData{
+bool isInherent;  # 是否固有, 比如律师徽章
+PropTypes PropType;
+Sprite PropSprite;
+string description;
+}
+
+TestimonyPrerequisiteTypes <--- TestimonyCardData
+TestimonyPointTypes <--- TestimonyCardData
+CardData <|--- TestimonyCardData
+class TestimonyCardData{
+bool neutral;  # 中立证言, 用于隔离其他证言
+TestimonyPointTypes truePointType;
+TestimonyPointTypes falsePointType;
+int truePoints;
+int falsePoints;
+TestimonyPrerequisiteTypes prerequisiteType;
+string description;
+}
+
+
+CardData <|---- CharacterCardData
+CharacterTypes <- CharacterCardData
+class CharacterCardData{
+string name;
+Sprite characterSprite;
+CharacterTypes characterType;
+}
+
+class CardUI{
+string name;
+
+void Display(CardData cardData);
+}
+@enduml

@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c295d5dc90984a56a480732dd7c101c9, type: 3}
+  m_Name: BToA
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: logic
+      Entry: 7
+      Data: 0|AceAttorney.Scripts.BToALogic, Assembly-CSharp
+    - Name: t0
+      Entry: 6
+      Data: 
+    - Name: t1
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+  cardUIPrefab: {fileID: 9124414626393245318, guid: b6a871a3c9708714580858176f1f1062, type: 3}
+  content: B->A
+  description: "\u82E5B\u771F\u5219A\u771F"

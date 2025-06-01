@@ -1,0 +1,57 @@
+@startuml
+'https://plantuml.com/class-diagram
+skinparam backgroundColor #777777
+skinparam classBackgroundColor #00000000
+
+enum TestimonyPrerequisiteTypes{
+None,
+ConnectedWithRed,
+ConnectedWithBlue,
+ConnectedWithGray
+}
+
+enum TestimonyPointTypes{
+None,
+ForLawyer,
+ForProcurator
+}
+enum TestimonyStates{
+Neutral,
+True,
+False
+}
+
+enum PropTypes{
+TakeThat,  # 看招
+Reverse,  # 逆转
+Wait,  # 等等
+Objection,  # 异议
+Silence,  # 肃静
+Reroll  # 重置场上证言[洗牌]
+}
+
+enum LogicTypes{
+AToB, 
+BToA, 
+AToNotB, 
+BToNotA
+}
+
+enum CardTypes {
+Judge,  # 法官
+Lawyer,  # 律师
+Procurator,  # 检察官
+Witness,  # 证人
+Logic,  # 逻辑牌
+Testimony, # 证言
+Prop, # 辩术
+Prop # 道具
+}
+enum CharacterTypes {
+Lawyer,  # 律师
+Procurator,  # 检察官
+Judge,  # 法官
+}
+
+@enduml
+

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea7410da1baa420092086249d15a5425, type: 3}
+  m_Name: Neutral
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  cardUIPrefab: {fileID: 2640688618792689074, guid: cf3663cb5d89dc0498ff28aad73c6c05, type: 3}
+  neutral: 1
+  truePointFor: 2
+  falsePointFor: 2
+  truePoints: 0
+  falsePoints: 0
+  prerequisiteType: 0
+  description: "\u9694\u79BB\u524D\u540E\u903B\u8F91\n\u53EF\u989D\u5916\u6253\u51FA1\u8BC1\u8A00"

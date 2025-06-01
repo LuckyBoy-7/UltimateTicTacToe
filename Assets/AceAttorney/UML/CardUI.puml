@@ -1,0 +1,63 @@
+@startuml
+'https://plantuml.com/class-diagram
+skinparam backgroundColor #777777
+skinparam classBackgroundColor #00000000
+
+
+class CardUI{
+string name;
+
+void Display(CardData cardData);
+}
+
+CardUI <|-- TestimonyCardUI
+class TestimonyCardUI{
+TMP_Text nameText;
+TMP_Text trueEffectText;
+TMP_Text falseEffectText;
+TMP_Text descriptionText;
+Image leftBackground;
+Image background;
+
+string name;
+bool truePointForLawyer;
+int truePoints;
+int falsePoints;
+string description;
+}
+
+
+TestimonyCardUI <|-- TestimonyWithDescriptionCardUI
+class TestimonyWithDescriptionCardUI{
+}
+
+
+'反正逻辑跟UI没关系, 所以这样不继承自己相关的应该也没事
+CardUI <|-- NeutralTestimonyCardUI
+class NeutralTestimonyCardUI{
+TMP_Text descriptionText;
+}
+
+
+CardUI <|-- PropCardUI
+class PropCardUI{
+SpriteRenderer sr;
+TMP_Text descriptionText;
+}
+
+
+CardUI <|-- WitnessCardUI
+class WitnessCardUI{
+TMP_Text nameText;
+SpriteRenderer sr;
+TMP_Text descriptionText;
+}
+
+
+CardUI <|-- WitnessCardUI
+class LawyerCardUI{
+TMP_Text nameText;
+SpriteRenderer sr;
+TMP_Text descriptionText;
+}
+@enduml

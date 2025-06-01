@@ -1,0 +1,35 @@
+@startuml
+'https://plantuml.com/class-diagram
+skinparam backgroundColor #777777
+skinparam classBackgroundColor #00000000
+!include CardData.puml
+!include CardUI.puml
+!include Card.puml
+
+
+
+
+
+Singleton <|- GameManager
+CharacterTypes <-- GameManager
+
+class GameManager {
+Color lawyerColor;  # 成步堂蓝
+Color procuratorColor;  # 御剑红
+Color judgeColor;  # 法官灰
+
+List<CharacterCard> characters;
+int currentCharacterIndex;
+
+Transform boardTransform;  # 手牌都要放到board上
+
+
+void Start()
+IEnumerator StartGame()
+IEnumerator ChooseSide()
+IEnumerator GameMainFlow()
+IEnumerator SupplyTestimonyCards()  # 证言补充到3张
+IEnumerator SupplyHoldingCards()  # 手牌补充到4张
+IEnumerator StartTheRound()  # 监听空格键, 打牌相关的交给其他类
+}
+@enduml
