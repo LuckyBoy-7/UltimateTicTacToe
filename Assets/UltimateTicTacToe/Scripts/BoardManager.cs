@@ -11,6 +11,7 @@ using UnityEngine.UIElements;
 
 public enum PlayerTypes
 {
+    None,
     Cross,
     Circle
 }
@@ -33,6 +34,10 @@ public class BoardManager : Engine
 
     public bool gameover;
 
+    public bool useAI;
+
+    public bool blockOperation;
+
 
     protected override void Awake()
     {
@@ -48,17 +53,17 @@ public class BoardManager : Engine
             {
                 Board board = this.NewSonWithComponent<Board>();
                 nineBoards[x, y] = board;
-                board.cellSize = cellSize;
+                board.UI.cellSize = board.cellSize = cellSize;
                 board.transform.position = new Vector3(x * 3 * cellSize, y * 3 * cellSize) + BoardBottomLeft;
-                board.lineColor = Color.gray;
-                board.canClick = true;
+                board.UI.lineColor = Color.gray;
+                board.canClick = x == 1 && y == 1;
             }
         }
 
         bigBoard = this.NewSonWithComponent<Board>();
-        bigBoard.cellSize = cellSize * 3;
+        bigBoard.UI.cellSize = bigBoard.cellSize = cellSize * 3;
         bigBoard.transform.position = BoardBottomLeft;
-        bigBoard.lineColor = Color.white;
+        bigBoard.UI.lineColor = Color.white;
         bigBoard.canClick = false;
     }
 
