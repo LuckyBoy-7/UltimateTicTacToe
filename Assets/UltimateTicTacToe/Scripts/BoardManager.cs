@@ -9,6 +9,10 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
+/// <summary>
+/// 参考视频: https://www.bilibili.com/video/BV1nT421Q7Do
+/// </summary>
+
 public enum PlayerTypes
 {
     None,
@@ -37,6 +41,9 @@ public class BoardManager : Engine
     public bool useAI;
 
     public bool blockOperation;
+    
+    public int currentBoardX = 1;
+    public int currentBoardY = 1;
 
 
     protected override void Awake()
@@ -56,7 +63,8 @@ public class BoardManager : Engine
                 board.UI.cellSize = board.cellSize = cellSize;
                 board.transform.position = new Vector3(x * 3 * cellSize, y * 3 * cellSize) + BoardBottomLeft;
                 board.UI.lineColor = Color.gray;
-                board.canClick = x == 1 && y == 1;
+                board.ticTacToe.x = x;
+                board.ticTacToe.y = y;
             }
         }
 
@@ -64,7 +72,6 @@ public class BoardManager : Engine
         bigBoard.UI.cellSize = bigBoard.cellSize = cellSize * 3;
         bigBoard.transform.position = BoardBottomLeft;
         bigBoard.UI.lineColor = Color.white;
-        bigBoard.canClick = false;
     }
 
     protected override void Update()

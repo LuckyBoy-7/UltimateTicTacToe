@@ -73,19 +73,17 @@ public class BoardUI : ManagedBehaviour
     }
 
 
-    public void UpdateUI(bool canClick)
+    public void UpdateUI(bool canFill)
     {
         if (canClickHint != null)
-            canClickHint.enabled = canClick;
+            canClickHint.enabled = canFill;
     }
 
 
     public IEnumerator FillCoroutine(int x, int y, PlayerTypes cellType)
     {
         // 填入圈或者叉
-        BoardManager.Instance.blockOperation = true;
         yield return FillCell(x, y, cellType);
-        BoardManager.Instance.blockOperation = false;
     }
 
 

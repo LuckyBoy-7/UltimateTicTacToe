@@ -154,9 +154,12 @@ MonoBehaviour:
   cellSize: 1
   lineWidth: 0.1
   bigBoard: {fileID: 0}
-  curPlayer: 0
+  curPlayer: 1
   gameover: 0
-  useAI: 0
+  useAI: 1
+  blockOperation: 0
+  currentBoardX: 1
+  currentBoardY: 1
 --- !u!4 &543845385
 Transform:
   m_ObjectHideFlags: 0
@@ -202,8 +205,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dontDestroyOnLoad: 0
-  playerType: 1
-  thinking: 0
+  playerType: 2
+  searchTimes: 200000
+  thinkingTime: 0
 --- !u!4 &887826401
 Transform:
   m_ObjectHideFlags: 0

@@ -8,6 +8,7 @@ namespace UltimateTicTacToe.Scripts
 
         public bool isOver;
         public PlayerTypes winner;
+        public int x, y;  // 相对于bigBoard的位置
 
         public PlayerTypes this[int x, int y]
         {

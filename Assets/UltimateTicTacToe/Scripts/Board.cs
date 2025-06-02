@@ -14,12 +14,12 @@ public class Board : ManagedBehaviour
 {
     public BoardUI UI;
     public float cellSize;
-    public bool canClick;
 
     [ShowInInspector] public TicTacToe ticTacToe = new();
     public Board[,] nineBoards => BoardManager.Instance.nineBoards;
     public Board parentBoard => BoardManager.Instance.bigBoard;
     public bool IsPlayerTurn => !BoardManager.Instance.useAI || BoardManager.Instance.curPlayer != AI.Instance.playerType;
+
 
     private void Awake()
     {
@@ -31,12 +31,28 @@ public class Board : ManagedBehaviour
     {
         base.ManagedUpdate();
 
-        if (Input.GetMouseButtonDown(0) && canClick && !BoardManager.Instance.blockOperation && IsPlayerTurn)
+        bool canFill = CheckCanFill();
+        if (Input.GetMouseButtonDown(0) && canFill && IsPlayerTurn && !BoardManager.Instance.blockOperation)
         {
             OnClick();
         }
 
-        UI.UpdateUI(canClick);
+        if (!BoardManager.Instance.blockOperation)
+            UI.UpdateUI(canFill);
+    }
+
+
+    private bool CheckCanFill()
+    {
+        if (ticTacToe.isOver || parentBoard.ticTacToe.isOver || parentBoard == this)
+            return false;
+        int x = BoardManager.Instance.currentBoardX;
+        int y = BoardManager.Instance.currentBoardY;
+        if (x == ticTacToe.x && y == ticTacToe.y)
+            return true;
+        if (nineBoards[x, y].ticTacToe.isOver)
+            return true;
+        return false;
     }
 
 
@@ -48,18 +64,23 @@ public class Board : ManagedBehaviour
         StartCoroutine(TryFillCoroutine(x, y, BoardManager.Instance.curPlayer));
     }
 
-    private IEnumerator TryFillCoroutine(int x, int y, PlayerTypes playerType)
+    public IEnumerator TryFillCoroutine(int x, int y, PlayerTypes playerType)
     {
         // 不是在当前board点的
         if (x < 0 || x >= 3 || y < 0 || y >= 3)
             yield break;
+
 
         // 填过了, 结束了(填满或胜利)
         if (ticTacToe[x, y] != PlayerTypes.None || ticTacToe.isOver)
             yield break;
 
         // 填入圈或者叉
+        bool block = BoardManager.Instance.blockOperation;
+        BoardManager.Instance.blockOperation = true;
         yield return UI.FillCoroutine(x, y, playerType);
+        BoardManager.Instance.blockOperation = block;
+
         ticTacToe[x, y] = playerType;
 
         ticTacToe.winner = ticTacToe.CheckWinState();
@@ -92,16 +113,7 @@ public class Board : ManagedBehaviour
 
     private IEnumerator FillParentCell()
     {
-        for (int x = 0; x < 3; x++)
-        {
-            for (int y = 0; y < 3; y++)
-            {
-                if (nineBoards[x, y] == this)
-                {
-                    yield return StartCoroutine(parentBoard.TryFillCoroutine(x, y, ticTacToe.winner));
-                }
-            }
-        }
+        yield return StartCoroutine(parentBoard.TryFillCoroutine(ticTacToe.x, ticTacToe.y, ticTacToe.winner));
     }
 
 
@@ -109,34 +121,10 @@ public class Board : ManagedBehaviour
     {
         BoardManager.Instance.curPlayer = BoardManager.Instance.curPlayer == PlayerTypes.Circle ? PlayerTypes.Cross : PlayerTypes.Circle;
 
-        for (int x = 0; x < 3; x++)
-        {
-            for (int y = 0; y < 3; y++)
-            {
-                nineBoards[x, y].canClick = false;
-            }
-        }
-
-        if (nineBoards[nx, ny].ticTacToe.isOver)
-        {
-            GiveArbitraryClickPermission();
-        }
-        else
-        {
-            nineBoards[nx, ny].canClick = true;
-        }
+        BoardManager.Instance.currentBoardX = nx;
+        BoardManager.Instance.currentBoardY = ny;
     }
 
-    private void GiveArbitraryClickPermission()
-    {
-        for (int x = 0; x < 3; x++)
-        {
-            for (int y = 0; y < 3; y++)
-            {
-                nineBoards[x, y].canClick = !nineBoards[x, y].ticTacToe.isOver;
-            }
-        }
-    }
 
     private void GameOver()
     {
@@ -145,7 +133,6 @@ public class Board : ManagedBehaviour
         {
             for (int y = 0; y < 3; y++)
             {
-                nineBoards[x, y].canClick = false;
                 nineBoards[x, y].UI.canClickHint.enabled = false;
             }
         }
