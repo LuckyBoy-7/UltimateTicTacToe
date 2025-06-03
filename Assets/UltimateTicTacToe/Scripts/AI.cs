@@ -11,6 +11,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
+
 public struct CellPos
 {
     public int boardX;
@@ -39,7 +40,8 @@ public struct CellPos
 
     public void SetBigCellType(PlayerTypes playerType)
     {
-        BoardManager.Instance.bigBoard.ticTacToe[innerX, innerY] = playerType;
+        TicTacToe ticTacToe = GetBoard().ticTacToe;
+        BoardManager.Instance.bigBoard.ticTacToe[ticTacToe.x, ticTacToe.y] = playerType;
     }
 
     public Board GetBoard()
@@ -48,105 +50,226 @@ public struct CellPos
     }
 }
 
-public class AI : Singleton<AI>
+public class MCTS
 {
-    public PlayerTypes playerType = PlayerTypes.Circle;
-
-    public Board[,] nineBoards => BoardManager.Instance.nineBoards;
-    public Board bigBoard => BoardManager.Instance.bigBoard;
-
-    public bool IsAITurn => BoardManager.Instance.useAI && BoardManager.Instance.curPlayer == playerType;
-    public int searchTimes = 10;
-
-    private int currentBoardX;
-    private int currentBoardY;
-
-    private bool thinking;
-    public float thinkingTime = 1f;
-
-    protected override void ManagedUpdate()
+    /// 己方是 1, 空白是 0, 对方是 2
+    public static Dictionary<string, int> pattern0ToScore = new()
     {
-        base.ManagedUpdate();
+        { "000", 0 },
+        { "100", 50 },
+        { "010", 80 },
+        { "001", 50 },
+        { "110", 200 },
+        { "101", 150 },
+        { "011", 200 },
+        { "111", 1000 },
 
-        if (IsAITurn && !BoardManager.Instance.blockOperation && !BoardManager.Instance.gameover && !thinking)
+        { "200", -50 },
+        { "020", -80 },
+        { "002", -50 },
+        { "220", -200 },
+        { "202", -150 },
+        { "022", -200 },
+        { "222", -1000 },
+
+        { "120", 10 },
+        { "102", 30 },
+        { "012", 30 },
+        { "210", 30 },
+        { "201", 30 },
+        { "021", 10 },
+
+        { "112", 100 },
+        { "121", 100 },
+        { "211", 100 },
+
+        { "221", -100 },
+        { "212", -100 },
+        { "122", -100 },
+    };
+
+    public static Dictionary<string, int> pattern1ToScore = new()
+    {
+        { "000", 0 },
+        { "100", 50 },
+        { "010", 80 },
+        { "001", 50 },
+        { "110", 200 },
+        { "101", 150 },
+        { "011", 200 },
+        { "111", 100000 },
+
+        { "200", -50 },
+        { "020", -80 },
+        { "002", -50 },
+        { "220", -200 },
+        { "202", -150 },
+        { "022", -200 },
+        { "222", -100000 },
+
+        { "120", 10 },
+        { "102", 30 },
+        { "012", 30 },
+        { "210", 30 },
+        { "201", 30 },
+        { "021", 10 },
+
+        { "112", 100 },
+        { "121", 100 },
+        { "211", 100 },
+
+        { "221", -100 },
+        { "212", -100 },
+        { "122", -100 },
+        // { "000", 0 },
+        // { "100", 500 },
+        // { "010", 800 },
+        // { "001", 500 },
+        // { "110", 2000 },
+        // { "101", 1500 },
+        // { "011", 2000 },
+        // { "111", 1000000 },
+        //
+        // { "200", -500 },
+        // { "020", -800 },
+        // { "002", -500 },
+        // { "220", -2000 },
+        // { "202", -1500 },
+        // { "022", -2000 },
+        // { "222", -1000000 },
+        //
+        // { "120", 100 },
+        // { "102", 300 },
+        // { "012", 300 },
+        // { "210", 300 },
+        // { "201", 300 },
+        // { "021", 100 },
+        //
+        // { "112", 1000 },
+        // { "121", 1000 },
+        // { "211", 1000 },
+        //
+        // { "221", -1000 },
+        // { "212", -1000 },
+        // { "122", -1000 },
+    };
+
+    private List<MCTS> children = new();
+    private Board[,] nineBoards;
+    private Board bigBoard;
+    private PlayerTypes playerType;
+
+    public int value;
+    public int totalValue;
+    public int depth = 1;
+    public int averageValue;
+    public int visitedCount;
+
+    public CellPos lastCellPos;
+
+    public MCTS(Board[,] nineBoards, Board bigBoard, PlayerTypes playerType, CellPos lastCellPos)
+    {
+        this.nineBoards = nineBoards;
+        this.bigBoard = bigBoard;
+        this.playerType = playerType;
+        this.lastCellPos = lastCellPos;
+    }
+
+    private void InitChildren(int currentBoardX, int currentBoardY)
+    {
+        var posesCanChoose = GetPosesCanChoose(currentBoardX, currentBoardY);
+        foreach (CellPos cellPos in posesCanChoose)
         {
-            StartCoroutine(Play());
+            FillAndRestoreCellPos(cellPos, () =>
+            {
+                MCTS mcts = new MCTS(nineBoards, bigBoard, playerType == PlayerTypes.Circle ? PlayerTypes.Cross : PlayerTypes.Circle, cellPos)
+                {
+                    value = GetValueByCurrentBoards(playerType),
+                    totalValue = value
+                };
+                children.Add(mcts);
+            });
         }
     }
 
 
-    private IEnumerator Play()
+    public void Simulate(int simulateTimes, int currentBoardX, int currentBoardY)
     {
-        // // 找到空位置
-        // List<CellPos> posesCanChoose = new();
-        // for (int boardX = 0; boardX < 3; boardX++)
-        // {
-        //     for (int boardY = 0; boardY < 3; boardY++)
-        //     {
-        //         for (int innerX = 0; innerX < 3; innerX++)
-        //         {
-        //             for (int innerY = 0; innerY < 3; innerY++)
-        //             {
-        //                 PlayerTypes curPlayerType = nineBoards[boardX, boardY].ticTacToe[innerX, innerY];
-        //                 if (curPlayerType == PlayerTypes.None)
-        //                     posesCanChoose.Add(new(boardX, boardY, innerX, innerY));
-        //             }
-        //         }
-        //     }
-        // }
-
-        thinking = true;
-        yield return new WaitForSeconds(thinkingTime);
-        thinking = false;
-        // 随机搜索若干次, 记录选某个位置胜利的次数
-        DefaultDict<CellPos, int[]> posToWinCount = new DefaultDict<CellPos, int[]>(() => new int[2] { 0, 0 });
-        for (int _ = 0; _ < searchTimes; _++)
+        for (int _ = 0; _ < simulateTimes; _++)
         {
-            currentBoardX = BoardManager.Instance.currentBoardX;
-            currentBoardY = BoardManager.Instance.currentBoardY;
-            (CellPos cellPos0, int win) = DFSNineBoards(playerType);
-            // win
-            posToWinCount[cellPos0][0] += win;
-            posToWinCount[cellPos0][1] += 1;
+            Search(currentBoardX, currentBoardY);
+        }
+    }
+
+    public void Search(int currentBoardX, int currentBoardY)
+    {
+        if (children.Count == 0)
+        {
+            InitChildren(currentBoardX, currentBoardY);
+            return;
         }
 
-        // if (posToWinCount.Count == 0)
-        // yield break;
 
-        // 找到胜率最高的位置并输出
-        float maxRate = Single.NegativeInfinity;
-        CellPos cellPos = new();
-        foreach ((CellPos cellPos0, int[] counts) in posToWinCount)
+        // GetPUCT
+        MCTS bestChild = null;
+        int bestPUCT = int.MinValue;
+        foreach (MCTS child in children)
         {
-            float rate = (float)counts[0] / counts[1];
-            if (rate > maxRate)
+            int PUCT = (int)(child.averageValue + 1.5f * child.value * Math.Sqrt(visitedCount) / (1 + child.visitedCount));
+            if (PUCT > bestPUCT)
             {
-                maxRate = rate;
-                cellPos = cellPos0;
+                bestPUCT = PUCT;
+                bestChild = child;
             }
         }
 
-
-        bool block = BoardManager.Instance.blockOperation;
-        BoardManager.Instance.blockOperation = true;
-
-        yield return new WaitForSeconds(0.1f);
-        yield return cellPos.GetBoard().TryFillCoroutine(cellPos.innerX, cellPos.innerY, playerType);
-
-        BoardManager.Instance.blockOperation = block;
+        FillAndRestoreCellPos(bestChild!.lastCellPos, () => { bestChild!.Search(bestChild.lastCellPos.boardX, bestChild.lastCellPos.boardY); });
+        visitedCount += 1;
+        // depth = bestChild.depth + 1;
+        totalValue -= bestChild.averageValue;
+        averageValue = totalValue / visitedCount;
     }
 
-    private (CellPos, int ) DFSNineBoards(PlayerTypes curPlayer)
+    private void FillAndRestoreCellPos(CellPos cellPos, Action callback)
     {
-        // int GetChosenIndex()
-        // {
-        //     if (!nineBoards[currentBoardX, currentBoardY].ticTacToe.isOver)
-        //     {
-        //         return UnityEngine.Random.Range(0, posesCanChoose.Count);
-        //     }
-        //     
-        // }
-        // 找到能用的空位置
+        Board board = cellPos.GetBoard();
+        cellPos.SetSmallCellType(playerType);
+        PlayerTypes winState = board.ticTacToe.CheckWinState();
+        // 当前盘分出胜负
+        if (winState is PlayerTypes.Circle or PlayerTypes.Cross)
+        {
+            cellPos.SetBigCellType(winState);
+            callback?.Invoke();
+            cellPos.SetBigCellType(PlayerTypes.None);
+            cellPos.SetSmallCellType(PlayerTypes.None);
+            return;
+        }
+
+        callback?.Invoke();
+        cellPos.SetSmallCellType(PlayerTypes.None);
+    }
+
+
+    public CellPos GetNextCellPos()
+    {
+        // GetPUCT
+        MCTS bestChild = null;
+        int bestVisCount = int.MinValue;
+        foreach (MCTS child in children)
+        {
+            if (child.visitedCount > bestVisCount)
+            {
+                bestVisCount = child.visitedCount;
+                bestChild = child;
+            }
+        }
+
+        return bestChild!.lastCellPos;
+    }
+
+
+    private List<CellPos> GetPosesCanChoose(int currentBoardX, int currentBoardY)
+    {
         List<CellPos> posesCanChoose = new();
         if (!nineBoards[currentBoardX, currentBoardY].ticTacToe.isOver)
         {
@@ -180,47 +303,171 @@ public class AI : Singleton<AI>
             }
         }
 
-        // 填满并胜利的情况已经被 gameover 考虑, 所以这里一定是平局
-        if (posesCanChoose.Count == 0)
-            return (new CellPos(), 0);
+        return posesCanChoose;
+    }
 
-        // 抽一个位置
-        int chosenIndex = UnityEngine.Random.Range(0, posesCanChoose.Count);
-        (posesCanChoose[chosenIndex], posesCanChoose[^1]) = (posesCanChoose[^1], posesCanChoose[chosenIndex]);
-        CellPos chosenPos = posesCanChoose.Pop();
-
-        // 填入符号
-        Board board = chosenPos.GetBoard();
-        chosenPos.SetSmallCellType(curPlayer);
-        PlayerTypes winState = board.ticTacToe.CheckWinState();
-        // 当前盘分出胜负
-        if (winState is PlayerTypes.Circle or PlayerTypes.Cross)
+    public int GetValueByCurrentBoards(PlayerTypes curPlayer)
+    {
+        int ans = 0;
+        for (int x = 0; x < 3; x++)
         {
-            bigBoard.ticTacToe[board.ticTacToe.x, board.ticTacToe.y] = winState;
-            PlayerTypes bigTicTacToeWinState = board.ticTacToe.CheckWinState();
-            // 整个盘分出胜负
-            if (bigTicTacToeWinState is PlayerTypes.Circle or PlayerTypes.Cross)
+            for (int y = 0; y < 3; y++)
             {
-                // 恢复现场
-                chosenPos.SetSmallCellType(PlayerTypes.None);
-                board.ticTacToe.isOver = false;
-                bigBoard.ticTacToe[board.ticTacToe.x, board.ticTacToe.y] = PlayerTypes.None;
-                bigBoard.ticTacToe.isOver = false;
-                posesCanChoose.Add(chosenPos);
-                (posesCanChoose[chosenIndex], posesCanChoose[^1]) = (posesCanChoose[^1], posesCanChoose[chosenIndex]);
-                return (chosenPos, curPlayer == winState ? 1 : -1);
+                ans += GetValueByCurrentBoard(nineBoards[x, y], curPlayer, false);
             }
         }
 
-        currentBoardX = chosenPos.innerX; // 这个不用恢复现场, 到时候外面会重新赋值的
-        currentBoardY = chosenPos.innerY;
-        (CellPos _, int win) = DFSNineBoards(playerType == PlayerTypes.Circle ? PlayerTypes.Cross : PlayerTypes.Circle);
-        // 恢复现场
-        chosenPos.SetSmallCellType(PlayerTypes.None);
-        bigBoard.ticTacToe[board.ticTacToe.x, board.ticTacToe.y] = PlayerTypes.None;
-        posesCanChoose.Add(chosenPos);
-        (posesCanChoose[chosenIndex], posesCanChoose[^1]) = (posesCanChoose[^1], posesCanChoose[chosenIndex]);
+        ans += GetValueByCurrentBoard(bigBoard, curPlayer, true);
+        return ans;
+    }
 
-        return (chosenPos, win == 0 ? 0 : -win);
+    private static int count = 0;
+
+    public int GetValueByCurrentBoard(Board board, PlayerTypes curPlayer, bool bigBoard)
+    {
+        TicTacToe ticTacToe = board.ticTacToe;
+
+        int value = 0;
+
+        string str = "";
+        // 横    
+        for (int y = 0; y < 3; y++)
+        {
+            str = "";
+            for (int x = 0; x < 3; x++)
+            {
+                str += PlayerTypeToString(ticTacToe[x, y], curPlayer);
+            }
+
+            value += GetValueByPattern(str, bigBoard);
+        }
+
+        // 竖
+        for (int x = 0; x < 3; x++)
+        {
+            str = "";
+            for (int y = 0; y < 3; y++)
+            {
+                str += PlayerTypeToString(ticTacToe[x, y], curPlayer);
+            }
+
+            value += GetValueByPattern(str, bigBoard);
+        }
+
+        // 主对角线
+        str = "";
+        for (int i = 0; i < 3; i++)
+        {
+            str += PlayerTypeToString(ticTacToe[i, i], curPlayer);
+        }
+
+        value += GetValueByPattern(str, bigBoard);
+
+        // 辅对角线
+        str = "";
+        for (int i = 0; i < 3; i++)
+        {
+            str += PlayerTypeToString(ticTacToe[i, 2 - i], curPlayer);
+        }
+
+        value += GetValueByPattern(str, bigBoard);
+        if (count++ < 100)
+            Debug.Log(this.value);
+        return value;
+    }
+
+    private int GetValueByPattern(string str, bool bigBoard)
+    {
+        if (bigBoard)
+            return pattern1ToScore[str];
+        return pattern0ToScore[str];
+    }
+
+
+    private static string PlayerTypeToString(PlayerTypes playerType, PlayerTypes curPlayingPlayer)
+    {
+        if (curPlayingPlayer == PlayerTypes.Cross)
+        {
+            return playerType switch
+            {
+                PlayerTypes.Cross => "1",
+                PlayerTypes.Circle => "2",
+                _ => "0"
+            };
+        }
+
+        return playerType switch
+        {
+            PlayerTypes.Cross => "2",
+            PlayerTypes.Circle => "1",
+            _ => "0"
+        };
+    }
+}
+
+public class AI : Singleton<AI>
+{
+    public PlayerTypes playerType = PlayerTypes.Circle;
+
+    public Board[,] nineBoards => BoardManager.Instance.nineBoards;
+    public Board bigBoard => BoardManager.Instance.bigBoard;
+
+    public bool IsAITurn => BoardManager.Instance.useAI && BoardManager.Instance.curPlayer == playerType;
+    public int searchTimes = 10;
+
+    private int currentBoardX;
+    private int currentBoardY;
+
+    private bool thinking;
+    public float thinkingTime = 1f;
+
+    protected override void ManagedUpdate()
+    {
+        base.ManagedUpdate();
+
+        if (IsAITurn && !BoardManager.Instance.blockOperation && !BoardManager.Instance.gameover && !thinking)
+        {
+            StartCoroutine(Play());
+        }
+    }
+
+
+    private IEnumerator Play()
+    {
+        thinking = true;
+        yield return new WaitForSeconds(thinkingTime);
+        thinking = false;
+
+        MCTS mcts = new MCTS(nineBoards, bigBoard, playerType, new CellPos());
+        mcts.Simulate(searchTimes, BoardManager.Instance.currentBoardX, BoardManager.Instance.currentBoardY);
+        // 随机搜索若干次, 记录选某个位置胜利的次数
+        // DefaultDict<CellPos, int[]> posToWinCount = new DefaultDict<CellPos, int[]>(() => new int[2] { 0, 0 });
+
+        //
+        // // if (posToWinCount.Count == 0)
+        // // yield break;
+        //
+        // // 找到胜率最高的位置并输出
+        // float maxRate = Single.NegativeInfinity;
+        // CellPos cellPos = new();
+        // foreach ((CellPos cellPos0, int[] counts) in posToWinCount)
+        // {
+        //     float rate = (float)counts[0] / counts[1];
+        //     if (rate > maxRate)
+        //     {
+        //         maxRate = rate;
+        //         cellPos = cellPos0;
+        //     }
+        // }
+
+
+        bool block = BoardManager.Instance.blockOperation;
+        BoardManager.Instance.blockOperation = true;
+
+        yield return new WaitForSeconds(0.1f);
+        CellPos cellPos = mcts.GetNextCellPos();
+        yield return cellPos.GetBoard().TryFillCoroutine(cellPos.innerX, cellPos.innerY, playerType);
+
+        BoardManager.Instance.blockOperation = block;
     }
 }
