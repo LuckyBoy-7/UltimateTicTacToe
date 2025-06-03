@@ -206,7 +206,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dontDestroyOnLoad: 0
   playerType: 2
-  searchTimes: 200000
+  searchTimes: 100000
   thinkingTime: 0
 --- !u!4 &887826401
 Transform:

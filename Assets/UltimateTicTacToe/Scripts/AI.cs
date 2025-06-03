@@ -67,18 +67,17 @@ public class AI : Singleton<AI>
         {
             currentBoardX = BoardManager.Instance.currentBoardX;
             currentBoardY = BoardManager.Instance.currentBoardY;
-            (int boardX, int boardY, int innerX, int innerY, bool win) = DFSNineBoards(playerType);
+            (int boardX, int boardY, int innerX, int innerY, int win) = DFSNineBoards(playerType);
             if (boardX == -1)
                 continue;
             var t = new Tuple<int, int, int, int>(boardX, boardY, innerX, innerY);
             // win
-            if (win)
-                posToWinCount[t][0] += 1;
+            posToWinCount[t][0] += win;
             posToWinCount[t][1] += 1;
         }
 
-        if (posToWinCount.Count == 0)
-            yield break;
+        // if (posToWinCount.Count == 0)
+        // yield break;
 
         // 找到胜率最高的位置并输出
         float maxRate = Single.NegativeInfinity;
@@ -109,7 +108,7 @@ public class AI : Singleton<AI>
         BoardManager.Instance.blockOperation = block;
     }
 
-    private (int, int, int, int, bool win) DFSNineBoards(PlayerTypes curPlayer)
+    private (int, int, int, int, int win) DFSNineBoards(PlayerTypes curPlayer)
     {
         // int GetChosenIndex()
         // {
@@ -153,8 +152,9 @@ public class AI : Singleton<AI>
             }
         }
 
+        // 填满并胜利的情况已经被 gameover 考虑, 所以这里一定是平局
         if (posesCanChoose.Count == 0)
-            return (-1, -1, -1, -1, false);
+            return (-1, -1, -1, -1, 0);
 
         // 抽一个位置
         int chosenIndex = UnityEngine.Random.Range(0, posesCanChoose.Count);
@@ -181,19 +181,19 @@ public class AI : Singleton<AI>
                 bigBoard.ticTacToe.isOver = false;
                 posesCanChoose.Add(chosenPos);
                 (posesCanChoose[chosenIndex], posesCanChoose[^1]) = (posesCanChoose[^1], posesCanChoose[chosenIndex]);
-                return (boardX, boardY, innerX, innerY, curPlayer == winState);
+                return (boardX, boardY, innerX, innerY, curPlayer == winState ? 1 : -1);
             }
         }
 
         currentBoardX = innerX; // 这个不用恢复现场, 到时候外面会重新赋值的
         currentBoardY = innerY;
-        (int _, int _, int _, int _, bool win) = DFSNineBoards(playerType == PlayerTypes.Circle ? PlayerTypes.Cross : PlayerTypes.Circle);
+        (int _, int _, int _, int _, int win) = DFSNineBoards(playerType == PlayerTypes.Circle ? PlayerTypes.Cross : PlayerTypes.Circle);
         // 恢复现场
         board.ticTacToe[innerX, innerY] = PlayerTypes.None;
         bigBoard.ticTacToe[board.ticTacToe.x, board.ticTacToe.y] = PlayerTypes.None;
         posesCanChoose.Add(chosenPos);
         (posesCanChoose[chosenIndex], posesCanChoose[^1]) = (posesCanChoose[^1], posesCanChoose[chosenIndex]);
 
-        return (boardX, boardY, innerX, innerY, !win);
+        return (boardX, boardY, innerX, innerY, win == 0 ? 0 : -win);
     }
 }
