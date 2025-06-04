@@ -12,74 +12,76 @@ using UnityEngine.UIElements;
 /// <summary>
 /// 参考视频: https://www.bilibili.com/video/BV1nT421Q7Do
 /// </summary>
-
-public enum PlayerTypes
+namespace UltimateTicTacToe
 {
-    None,
-    Cross,
-    Circle
-}
-
-public class BoardManager : Engine
-{
-    public static BoardManager Instance;
-
-    // 单元格大小
-    public float cellSize;
-
-    // lineWidth
-    public float lineWidth;
-
-    public Board[,] nineBoards = new Board[3, 3];
-    public Board bigBoard;
-    public PlayerTypes curPlayer = PlayerTypes.Cross;
-
-    public Vector3 BoardBottomLeft => transform.position - new Vector3(1, 1) * (cellSize * 4.5f);
-
-    public bool gameover;
-
-    public bool useAI;
-
-    public bool blockOperation;
-    
-    public int currentBoardX = 1;
-    public int currentBoardY = 1;
-
-
-    protected override void Awake()
+    public enum PlayerTypes
     {
-        base.Awake();
-        Instance = this;
+        None,
+        Cross,
+        Circle
     }
 
-    private void Start()
+    public class BoardManager : Engine
     {
-        for (int x = 0; x < 3; x++)
+        public static BoardManager Instance;
+
+        // 单元格大小
+        public float cellSize;
+
+        // lineWidth
+        public float lineWidth;
+
+        public Board[,] nineBoards = new Board[3, 3];
+        public Board bigBoard;
+        public PlayerTypes curPlayer = PlayerTypes.Cross;
+
+        public Vector3 BoardBottomLeft => transform.position - new Vector3(1, 1) * (cellSize * 4.5f);
+
+        public bool gameover;
+
+        public bool useAI;
+
+        public bool blockOperation;
+
+        public int currentBoardX = 1;
+        public int currentBoardY = 1;
+
+
+        protected override void Awake()
         {
-            for (int y = 0; y < 3; y++)
-            {
-                Board board = this.NewSonWithComponent<Board>();
-                nineBoards[x, y] = board;
-                board.UI.cellSize = board.cellSize = cellSize;
-                board.transform.position = new Vector3(x * 3 * cellSize, y * 3 * cellSize) + BoardBottomLeft;
-                board.UI.lineColor = Color.gray;
-                board.ticTacToe.x = x;
-                board.ticTacToe.y = y;
-            }
+            base.Awake();
+            Instance = this;
         }
 
-        bigBoard = this.NewSonWithComponent<Board>();
-        bigBoard.UI.cellSize = bigBoard.cellSize = cellSize * 3;
-        bigBoard.transform.position = BoardBottomLeft;
-        bigBoard.UI.lineColor = Color.white;
-    }
-
-    protected override void Update()
-    {
-        base.Update();
-        if (Input.GetKeyDown(KeyCode.R))
+        private void Start()
         {
-            SceneManager.LoadScene("UltimateTicTacToe");
+            for (int x = 0; x < 3; x++)
+            {
+                for (int y = 0; y < 3; y++)
+                {
+                    Board board = this.NewSonWithComponent<Board>();
+                    nineBoards[x, y] = board;
+                    board.UI.cellSize = board.cellSize = cellSize;
+                    board.transform.position = new Vector3(x * 3 * cellSize, y * 3 * cellSize) + BoardBottomLeft;
+                    board.UI.lineColor = Color.gray;
+                    board.ticTacToe.x = x;
+                    board.ticTacToe.y = y;
+                }
+            }
+
+            bigBoard = this.NewSonWithComponent<Board>();
+            bigBoard.UI.cellSize = bigBoard.cellSize = cellSize * 3;
+            bigBoard.transform.position = BoardBottomLeft;
+            bigBoard.UI.lineColor = Color.white;
+        }
+
+        protected override void Update()
+        {
+            base.Update();
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                SceneManager.LoadScene("UltimateTicTacToe");
+            }
         }
     }
 }

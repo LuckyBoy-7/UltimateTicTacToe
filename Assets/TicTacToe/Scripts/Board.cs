@@ -10,7 +10,7 @@ using Sirenix.OdinInspector;
 using UltimateTicTacToe.Scripts;
 using UnityEngine;
 
-namespace UltimateTicTacToe
+namespace TicTacToe
 {
     public class Board : ManagedBehaviour
     {
@@ -18,8 +18,6 @@ namespace UltimateTicTacToe
         public float cellSize;
 
         [ShowInInspector] public TicTacToe ticTacToe = new();
-        public Board[,] nineBoards => BoardManager.Instance.nineBoards;
-        public Board parentBoard => BoardManager.Instance.bigBoard;
         public bool IsPlayerTurn => !BoardManager.Instance.useAI || BoardManager.Instance.curPlayer != AI.Instance.aiPlayerType;
 
 
@@ -38,23 +36,12 @@ namespace UltimateTicTacToe
             {
                 OnClick();
             }
-
-            if (!BoardManager.Instance.blockOperation)
-                UI.UpdateUI(canFill);
         }
 
 
         private bool CheckCanFill()
         {
-            if (ticTacToe.isOver || parentBoard.ticTacToe.isOver || parentBoard == this)
-                return false;
-            int x = BoardManager.Instance.currentBoardX;
-            int y = BoardManager.Instance.currentBoardY;
-            if (x == ticTacToe.x && y == ticTacToe.y)
-                return true;
-            if (nineBoards[x, y].ticTacToe.isOver)
-                return true;
-            return false;
+            return !ticTacToe.isOver;
         }
 
 
@@ -89,59 +76,36 @@ namespace UltimateTicTacToe
             if (ticTacToe.winner != PlayerTypes.None)
             {
                 ticTacToe.isOver = true;
-                if (parentBoard == this) // 如果当前是bigBoard
-                {
-                    print("game over");
-                    GameOver();
-                }
-                else
-                {
-                    UI.StartCoroutine(UI.Rollback());
-                    yield return StartCoroutine(FillParentCell());
-                }
+                print("game over");
+                GameOver();
             }
 
             if (!ticTacToe.isOver && ticTacToe.CheckFull())
             {
                 ticTacToe.isOver = true;
+                BoardManager.Instance.gameover = true;
             }
 
-            if (parentBoard != this && !BoardManager.Instance.gameover)
+            if (!BoardManager.Instance.gameover)
             {
                 NextTurn(x, y);
             }
 
-            if (parentBoard != this)
-                EventManager.Instance.AfterFillCell?.Invoke(new CellPos(ticTacToe.x, ticTacToe.y, x, y));
+            EventManager.Instance.AfterFillCell?.Invoke(new CellPos(x, y));
             // print($"{ticTacToe.x}, {ticTacToe.y} -> {x}, {y} by {playerType}");
         }
 
-
-        private IEnumerator FillParentCell()
-        {
-            yield return StartCoroutine(parentBoard.TryFillCoroutine(ticTacToe.x, ticTacToe.y, ticTacToe.winner));
-        }
 
 
         private void NextTurn(int nx, int ny)
         {
             BoardManager.Instance.curPlayer = BoardManager.Instance.curPlayer == PlayerTypes.Circle ? PlayerTypes.Cross : PlayerTypes.Circle;
-
-            BoardManager.Instance.currentBoardX = nx;
-            BoardManager.Instance.currentBoardY = ny;
         }
 
 
         private void GameOver()
         {
             BoardManager.Instance.gameover = true;
-            for (int x = 0; x < 3; x++)
-            {
-                for (int y = 0; y < 3; y++)
-                {
-                    nineBoards[x, y].UI.canClickHint.enabled = false;
-                }
-            }
         }
     }
 }

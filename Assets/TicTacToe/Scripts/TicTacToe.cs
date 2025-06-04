@@ -1,7 +1,9 @@
 using Unity.Collections;
+using UnityEngine;
 
-namespace UltimateTicTacToe
+namespace TicTacToe
 {
+
     public class TicTacToe
     {
         public PlayerTypes[,] board = new PlayerTypes[3, 3];

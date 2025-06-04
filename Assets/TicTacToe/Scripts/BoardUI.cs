@@ -10,8 +10,9 @@ using Sirenix.OdinInspector;
 using UltimateTicTacToe.Scripts;
 using UnityEngine;
 
-namespace UltimateTicTacToe
+namespace TicTacToe
 {
+
     public class BoardUI : ManagedBehaviour
     {
         public float cellSize;
@@ -20,22 +21,10 @@ namespace UltimateTicTacToe
         public static int lineSortingOrder = 0;
 
         [ShowInInspector] public Cell[,] cells = new Cell[3, 3];
-        public SpriteRenderer canClickHint;
 
         private void Start()
         {
-            Init();
             DrawBoard();
-        }
-
-        private void Init()
-        {
-            canClickHint = this.NewSonWithComponent<SpriteRenderer>();
-            canClickHint.sprite = Resources.Load<Sprite>("Default/Sprites/Square");
-            canClickHint.transform.position = transform.position + (Vector3)Vector2.one * (cellSize * 1.5f);
-            canClickHint.transform.localScale = Vector3.one * cellSize * 3;
-            canClickHint.color = canClickHint.color.WithA(0.1f);
-            canClickHint.sortingOrder = 100;
         }
 
         private void DrawBoard()
@@ -74,12 +63,6 @@ namespace UltimateTicTacToe
             return line;
         }
 
-
-        public void UpdateUI(bool canFill)
-        {
-            if (canClickHint != null)
-                canClickHint.enabled = canFill;
-        }
 
 
         public IEnumerator FillCoroutine(int x, int y, PlayerTypes cellType)
