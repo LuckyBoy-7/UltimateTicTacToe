@@ -57,7 +57,7 @@ namespace TicTacToe
             base.Update();
             if (Input.GetKeyDown(KeyCode.R))
             {
-                SceneManager.LoadScene("UltimateTicTacToe");
+                SceneManager.LoadScene("TicTacToe");
             }
         }
     }

@@ -208,7 +208,8 @@ MonoBehaviour:
   aiPlayerType: 2
   searchTimes: 100000
   thinkingTime: 0
-  c: 1
+  totalVisitedCount: 0
+  c: 1.4
 --- !u!4 &887826401
 Transform:
   m_ObjectHideFlags: 0
