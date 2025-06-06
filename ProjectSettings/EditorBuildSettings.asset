@@ -8,7 +8,4 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/UltimateTicTacToe/Scenes/UltimateTicTacToe.unity
     guid: 0874dc8eab136fc4d9a1dc59db1e3fcc
-  - enabled: 1
-    path: Assets/TicTacToe/Scenes/TicTacToe.unity
-    guid: 901b25450f65fe146b0c93f14629eb78
   m_configObjects: {}

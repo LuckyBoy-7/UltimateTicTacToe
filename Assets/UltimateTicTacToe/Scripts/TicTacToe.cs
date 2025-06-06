@@ -71,5 +71,32 @@ namespace UltimateTicTacToe
 
             return PlayerTypes.None;
         }
+
+        public float GetScore(PlayerTypes playerType)
+        {
+            float score = 0;
+            for (int x = 0; x < 3; x++)
+            {
+                for (int y = 0; y < 3; y++)
+                {
+                    if (board[x, y] == PlayerTypes.None)
+                        continue;
+                    // 从落子角度看, 下在角落好点, 从局面来看, 中间有子好点
+                    float multiplier = 1f;
+                    if (x == 1 && y == 1)
+                        multiplier = 2f;
+                    else if((x == 0 && y == 0) || (x == 2 && y == 2) || (x == 0 && y == 2) || (x == 2 && y == 0))
+                        multiplier = 1.5f;
+                    else
+                        multiplier = 1f;
+                    if (board[x, y] == playerType)
+                        score += multiplier;
+                    else
+                        score -= multiplier;
+                }
+            }
+
+            return score + 2;
+        }
     }
 }

@@ -94,7 +94,7 @@ namespace TicTacToe
         {
             foreach (CellPos cellPos in GetPosesCanChoose())
             {
-                FillAndRestoreCellPos(cellPos, () =>
+                FillAndRestoreCellPos(playerType, cellPos, () =>
                 {
                     MCTS mcts = new MCTS(curBoard, GetOppositePlayerType(playerType), cellPos)
                     {
@@ -181,7 +181,7 @@ namespace TicTacToe
             // if (count++ % 1000 == 0)
             // Debug.Log(bestChild);
 
-            FillAndRestoreCellPos(bestChild!.lastCellPos, () => { bestChild!.Select(); });
+            FillAndRestoreCellPos(playerType, bestChild!.lastCellPos, () => { bestChild!.Select(); });
             // depth = bestChild.depth + 1;
             // totalValue += lastChild.playerType == playerType ? lastChild.totalValue : -lastChild.totalValue;
         }
@@ -190,14 +190,15 @@ namespace TicTacToe
         {
             if (parent == null)
                 return 0;
-            return (float)(averageValue + AI.Instance.c * Math.Sqrt(Math.Log(AI.Instance.mcts.visitedCount) / visitedCount));
+            return (float)(averageValue + AI.Instance.c * Math.Sqrt(Math.Log(parent.visitedCount) / visitedCount));
+            // return (float)(averageValue + AI.Instance.c * Math.Sqrt(Math.Log(AI.Instance.mcts.visitedCount) / visitedCount));
             // return (float)(averageValue + AI.Instance.c * Math.Sqrt(Math.Log(parent.visitedCount) / visitedCount));
         }
 
-        public void FillAndRestoreCellPos(CellPos cellPos, Action callback)
+        public void FillAndRestoreCellPos(PlayerTypes player, CellPos cellPos, Action callback)
         {
             Board board = curBoard;
-            cellPos.SetCellType(playerType);
+            cellPos.SetCellType(player);
             PlayerTypes winState = board.ticTacToe.CheckWinState();
             // 当前盘分出胜负
             if (winState is PlayerTypes.Circle or PlayerTypes.Cross)
@@ -246,7 +247,7 @@ namespace TicTacToe
         public void Simulate()
         {
             PlayerTypes ans = PlayerTypes.None;
-            FillAndRestoreCellPos(lastCellPos, () => { ans = RandomFillUntilEnd(GetOppositePlayerType(playerType)); });
+            FillAndRestoreCellPos(GetOppositePlayerType(playerType), lastCellPos, () => { ans = RandomFillUntilEnd(playerType); });
             Backpropagation(ans);
         }
 
@@ -337,7 +338,7 @@ namespace TicTacToe
             mcts = mcts.GetNextMCTS(cellPos);
             mcts.parent = null;
         }
-        
+
 
         private IEnumerator Play()
         {
@@ -346,7 +347,6 @@ namespace TicTacToe
             thinking = false;
 
             // MCTS mcts = new MCTS(nineBoards, bigBoard, aiPlayerType, new CellPos());
-           
 
 
             Debug.Log("====================================");

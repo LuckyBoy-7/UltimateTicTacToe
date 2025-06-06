@@ -90,14 +90,15 @@ namespace UltimateTicTacToe
         private Board bigBoard;
         public PlayerTypes playerType;
 
-        public int totalValue;
-        public float averageValue => (float)totalValue / visitedCount;
+        public float totalValue;
+        public float averageValue => totalValue / visitedCount;
         public int visitedCount;
 
         public CellPos preCellPos;
         public MCTS parent;
         public bool terminated;
         public PlayerTypes terminatedWinner;
+        public float terminatedScore;
 
         public MCTS(Board[,] nineBoards, Board bigBoard, PlayerTypes playerType, CellPos lastCellPos)
         {
@@ -166,7 +167,7 @@ namespace UltimateTicTacToe
         {
             if (terminated)
             {
-                Backpropagation(terminatedWinner);
+                Backpropagation(terminatedWinner, terminatedScore);
                 return;
             }
 
@@ -177,11 +178,13 @@ namespace UltimateTicTacToe
                 {
                     terminated = true;
                     terminatedWinner = bigBoard.ticTacToe.CheckWinState();
+                    if (terminatedWinner != PlayerTypes.None)
+                        terminatedScore = bigBoard.ticTacToe.GetScore(terminatedWinner);
 
                     if (count++ < 1000)
                         Debug.Log(terminatedWinner);
                     // Simulate();
-                    Backpropagation(terminatedWinner);
+                    Backpropagation(terminatedWinner, terminatedScore);
                     poses.Dispose();
                     return;
                 }
@@ -212,7 +215,6 @@ namespace UltimateTicTacToe
 
                 float UCB = child.GetUCB();
 
-
                 if (UCB > bestUCB)
                 {
                     bestUCB = UCB;
@@ -232,32 +234,23 @@ namespace UltimateTicTacToe
                 bestChild = visitBestChild;
             }
 
-            // if (count++ % 1000 == 0)
-            // Debug.Log(bestChild);
 
             FillAndRestoreCellPos(playerType, bestChild!.preCellPos, () => { bestChild!.Select(bestChild.preCellPos.innerX, bestChild.preCellPos.innerY, leftSelectCount); });
-            // FillAndRestoreCellPos(playerType, bestChild!.preCellPos, () => { bestChild!.Select(bestChild.preCellPos.innerX, bestChild.preCellPos.innerY); });
-            // depth = bestChild.depth + 1;
-            // totalValue += lastChild.playerType == playerType ? lastChild.totalValue : -lastChild.totalValue;
         }
 
         private float GetUCB()
         {
             if (parent == null)
                 return 0;
-            // return (float)(averageValue + AI.Instance.c * Math.Sqrt(Math.Log(AI.Instance.mcts.visitedCount) / visitedCount));
-            // return (float)(averageValue + AI.Instance.c * Math.Sqrt(Math.Log(AI.Instance.totalVisitedCount) / visitedCount));
-            // float c = Ease.CubicEaseOut((float)AI.Instance.playedCharNumber / 81);
-            float c = 1 - Ease.CubicEaseOutIn((float)AI.Instance.playedCharNumber / 81);
-            return (float)(averageValue + c * AI.Instance.c * Math.Sqrt(Math.Log(parent.visitedCount) / visitedCount));
-            // return (float)(averageValue + AI.Instance.c * Math.Sqrt(Math.Log(parent.visitedCount) / visitedCount));
-            // return (float)(averageValue + AI.Instance.c * Math.Sqrt(Math.Log(parent.visitedCount) / visitedCount));
+
+            float c = 1 - Ease.SineEaseIn(AI.Instance.playedCharNumber / 200f);
+            return (float)(averageValue + c*AI.Instance.c * Math.Sqrt(Math.Log(parent.visitedCount) / visitedCount));
         }
 
-        private void FillAndRestoreCellPos(PlayerTypes playerType, CellPos cellPos, Action callback)
+        private void FillAndRestoreCellPos(PlayerTypes player, CellPos cellPos, Action callback)
         {
             Board board = cellPos.GetBoard();
-            cellPos.SetSmallCellType(playerType);
+            cellPos.SetSmallCellType(player);
             PlayerTypes winState = board.ticTacToe.CheckWinState();
             // 当前盘分出胜负
             if (winState is PlayerTypes.Circle or PlayerTypes.Cross)
@@ -276,60 +269,35 @@ namespace UltimateTicTacToe
             cellPos.SetSmallCellType(PlayerTypes.None);
         }
 
-        private PlayerTypes RandomFillUntilEnd(PlayerTypes curPlayer, int currentBoardX, int currentBoardY)
+        private (PlayerTypes, float) RandomFillUntilEnd(PlayerTypes curPlayer, int currentBoardX, int currentBoardY)
         {
             // 找到能用的空位置
             List<CellPos> posesCanChoose = GetPosesCanChoose(currentBoardX, currentBoardY).ToList();
             if (posesCanChoose.Count == 0)
-                return PlayerTypes.None;
+            {
+                // int score = 0;
+                // for (int x = 0; x < 3; x++)
+                // {
+                //     for (int y = 0; y < 3; y++)
+                //     {
+                //         var w = bigBoard.ticTacToe[x, y];
+                //         if (w == PlayerTypes.None)
+                //             continue;
+                //         if (w == curPlayer)
+                //             score += 1;
+                //         else
+                //             score -= 1;
+                //     }
+                // }
+
+                // 哪怕是平局可能也是比较差的局面的平局, 但是贡献不能像胜利或失败整那么大
+                return (PlayerTypes.None, bigBoard.ticTacToe.GetScore(curPlayer) / 2);
+                // return (PlayerTypes.None, (score * 0.5f));
+            }
 
             // 抽一个位置
             int chosenIndex = UnityEngine.Random.Range(0, posesCanChoose.Count);
             CellPos chosenPos = posesCanChoose[chosenIndex];
-
-            // foreach (CellPos cellPos in posesCanChoose)
-            // {
-            //     if (nineBoards[cellPos.innerX, cellPos.innerY].ticTacToe.isOver || cellPos.innerX == 1 && cellPos.innerY == 1)
-            //     {
-            //         if (cellPos.Equals(chosenPos))
-            //             if (RandomUtils.NextFloat() < AI.Instance.probabilityToChooseDanger)
-            //                 return PlayerTypes.None;
-            //     }
-            // }
-
-            // List<CellPos> dangerPoses = new();
-            // List<CellPos> normalPoses = new();
-            // foreach (CellPos cellPos in posesCanChoose)
-            // {
-            //     if (nineBoards[cellPos.innerX, cellPos.innerY].ticTacToe.isOver || cellPos.innerX == 1 && cellPos.innerY == 1)
-            //     {
-            //         dangerPoses.Add(cellPos);
-            //     }
-            //     else
-            //     {
-            //         normalPoses.Add(cellPos);
-            //     }
-            // }
-            //
-            // CellPos chosenPos = new();
-            // if (normalPoses.Count > 0)
-            // {
-            //     if (dangerPoses.Count > 0 && RandomUtils.NextFloat() < AI.Instance.probabilityToChooseDanger)
-            //     {
-            //         // chosenPos = dangerPoses[UnityEngine.Random.Range(0, dangerPoses.Count)];
-            //         chosenPos = dangerPoses.Choice();
-            //     }
-            //     else
-            //     {
-            //         chosenPos = normalPoses.Choice();
-            //         // chosenPos = normalPoses[UnityEngine.Random.Range(0, normalPoses.Count)];
-            //     }
-            // }
-            // else
-            // {
-            //     chosenPos = dangerPoses.Choice();
-            //     // chosenPos = dangerPoses[UnityEngine.Random.Range(0, dangerPoses.Count)];
-            // }
 
             // 填入符号
             Board board = chosenPos.GetBoard();
@@ -349,36 +317,52 @@ namespace UltimateTicTacToe
                     board.ticTacToe.isOver = false;
                     bigBoard.ticTacToe[board.ticTacToe.x, board.ticTacToe.y] = PlayerTypes.None;
                     bigBoard.ticTacToe.isOver = false;
-                    return bigTicTacToeWinState;
+                    // int score = 0;
+                    // for (int x = 0; x < 3; x++)
+                    // {
+                    //     for (int y = 0; y < 3; y++)
+                    //     {
+                    //         var w = bigBoard.ticTacToe[x, y];
+                    //         if (w == PlayerTypes.None)
+                    //             continue;
+                    //         if (w == curPlayer)
+                    //             score += 1;
+                    //         else
+                    //             score -= 1;
+                    //     }
+                    // }
+
+                    return (bigTicTacToeWinState, bigBoard.ticTacToe.GetScore(bigTicTacToeWinState));
                 }
             }
 
             currentBoardX = chosenPos.innerX; // 这个不用恢复现场, 到时候外面会重新赋值的
             currentBoardY = chosenPos.innerY;
-            var winner = RandomFillUntilEnd(GetOppositePlayerType(curPlayer), currentBoardX, currentBoardY);
+            var (winner, s) = RandomFillUntilEnd(GetOppositePlayerType(curPlayer), currentBoardX, currentBoardY);
             // 恢复现场
             board.ticTacToe.isOver = false;
             chosenPos.SetSmallCellType(PlayerTypes.None);
             bigBoard.ticTacToe[board.ticTacToe.x, board.ticTacToe.y] = PlayerTypes.None;
 
-            return winner;
+            return (winner, s);
         }
 
         public void Simulate()
         {
             PlayerTypes ans = PlayerTypes.None;
-            FillAndRestoreCellPos(GetOppositePlayerType(playerType), preCellPos, () => { ans = RandomFillUntilEnd(playerType, preCellPos.innerX, preCellPos.innerY); });
-            Backpropagation(ans);
+            float score = 0;
+            FillAndRestoreCellPos(GetOppositePlayerType(playerType), preCellPos, () => { (ans, score) = RandomFillUntilEnd(playerType, preCellPos.innerX, preCellPos.innerY); });
+            Backpropagation(ans, score);
         }
 
-        public void Backpropagation(PlayerTypes ans)
+        public void Backpropagation(PlayerTypes ans, float score)
         {
             visitedCount++;
-            totalValue += ans == PlayerTypes.None ? 0 : ans == playerType ? -1 : 1;
+            totalValue += ans == PlayerTypes.None ? 0 : ans == playerType ? -score : score;
             // totalValue += ans == playerType ? 1 : 0;
             if (parent == null)
                 return;
-            parent.Backpropagation(ans);
+            parent.Backpropagation(ans, score);
         }
 
 
@@ -397,7 +381,6 @@ namespace UltimateTicTacToe
 
             return bestChild!.preCellPos;
         }
-
 
         private IEnumerable<CellPos> GetPosesCanChoose(int currentBoardX, int currentBoardY)
         {

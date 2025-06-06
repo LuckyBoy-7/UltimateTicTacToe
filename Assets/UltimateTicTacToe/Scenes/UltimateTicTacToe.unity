@@ -154,7 +154,7 @@ MonoBehaviour:
   cellSize: 1
   lineWidth: 0.1
   bigBoard: {fileID: 0}
-  curPlayer: 1
+  curPlayer: 2
   gameover: 0
   useAI: 1
   blockOperation: 0
@@ -208,8 +208,9 @@ MonoBehaviour:
   aiPlayerType: 2
   searchTimes: 100000
   thinkingTime: 0
-  totalVisitedCount: 0
-  c: 1.4
+  c: 1.5
+  playedCharNumber: 0
+  probabilityToChooseDanger: 0.103
 --- !u!4 &887826401
 Transform:
   m_ObjectHideFlags: 0

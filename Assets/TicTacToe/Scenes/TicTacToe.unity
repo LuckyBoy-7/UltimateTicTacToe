@@ -169,7 +169,7 @@ MonoBehaviour:
   cellSize: 1
   lineWidth: 0.05
   curBoard: {fileID: 0}
-  curPlayer: 1
+  curPlayer: 2
   gameover: 0
   useAI: 1
   blockOperation: 0
@@ -219,7 +219,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dontDestroyOnLoad: 0
   aiPlayerType: 2
-  searchTimes: 10000
+  searchTimes: 100000
   thinkingTime: 0
   c: 1.5
 --- !u!1 &1462502565
