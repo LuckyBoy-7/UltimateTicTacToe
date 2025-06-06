@@ -36,6 +36,7 @@ namespace UltimateTicTacToe
             canClickHint.transform.localScale = Vector3.one * cellSize * 3;
             canClickHint.color = canClickHint.color.WithA(0.1f);
             canClickHint.sortingOrder = 100;
+            canClickHint.enabled = false;
         }
 
         private void DrawBoard()

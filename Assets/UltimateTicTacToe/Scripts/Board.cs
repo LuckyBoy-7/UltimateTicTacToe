@@ -20,7 +20,7 @@ namespace UltimateTicTacToe
         [ShowInInspector] public TicTacToe ticTacToe = new();
         public Board[,] nineBoards => BoardManager.Instance.nineBoards;
         public Board parentBoard => BoardManager.Instance.bigBoard;
-        public bool IsPlayerTurn => !BoardManager.Instance.useAI || BoardManager.Instance.curPlayer != AI.Instance.aiPlayerType;
+        public bool IsPlayerTurn => !BoardManager.Instance.AIPlayer0.IsAITurn && !BoardManager.Instance.AIPlayer1.IsAITurn;
 
 
         private void Awake()
@@ -109,6 +109,10 @@ namespace UltimateTicTacToe
             if (parentBoard != this && !BoardManager.Instance.gameover)
             {
                 NextTurn(x, y);
+                if (!BoardManager.Instance.GetPosesCanChoose(x, y).GetEnumerator().MoveNext())
+                {
+                    GameOver();
+                }
             }
 
             if (parentBoard != this)
